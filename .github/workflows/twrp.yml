@@ -20,11 +20,11 @@ jobs:
         git config --global user.name "Builder"
         git config --global user.email "builder@twrp.me"
 
-    # Скачиваем свежий скрипт напрямую через Python-зеркало Google
+    # Скачиваем скрипт напрямую с GitHub, где лежит чистый Python-код без HTML-заглушек
     - name: Установка свежего Google Repo
       run: |
         mkdir -p ~/bin
-        curl -sL https://googleapis.com > ~/bin/repo
+        curl -sL https://githubusercontent.com > ~/bin/repo
         chmod a+x ~/bin/repo
 
     # ВАЖНО: вызываем утилиту строго через python3 ~/bin/repo, чтобы она правильно распарсила URL манифеста
