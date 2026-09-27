@@ -1,0 +1,72 @@
+name: Сборка TWRP (Android 14.0)
+
+on:
+  workflow_dispatch: # Запуск вручную кнопкой в интерфейсе GitHub Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Клонирование текущего репозитория (скачиваем sea.zip)
+      uses: actions/checkout@v4
+
+    - name: Подготовка окружения Ubuntu (Очищенный набор пакетов)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32readline-dev lib32z1-dev liblz4-tool libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev unzip
+
+    - name: Установка официальной утилиты Repo
+      run: |
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
+        sudo ln -sf ~/bin/repo /usr/bin/repo
+
+    - name: Настройка Git
+      run: |
+        git config --global user.name "Builder"
+        git config --global user.email "builder@twrp.me"
+
+    - name: Инициализация и синхронизация минимального манифеста TWRP 14
+      run: |
+        mkdir twrp
+        cd twrp
+        # Инициализируем манифест OmniROM для Android 14
+        repo init -u https://github.com -b twrp-14.0 --depth=1
+        # Синхронизируем исходники
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+    - name: Распаковка Device Tree с отсечением верхней папки
+      run: |
+        # ВНИМАНИЕ: Замените 'ваша_модель' на кодовое имя вашего устройства!
+        TARGET_DIR="twrp/device/xiaomi/sea"
+        mkdir -p $TARGET_DIR
+        
+        # Создаем временную папку, чтобы разобрать вложенность архива
+        mkdir -p /tmp/sea_extract
+        unzip -q "$GITHUB_WORKSPACE/sea.zip" -d /tmp/sea_extract
+        
+        # Переносим всё содержимое из внутренней папки в целевую директорию
+        mv /tmp/sea_extract/*/* $TARGET_DIR/
+        rm -rf /tmp/sea_extract
+        
+        echo "=== Проверка структуры дерева устройства ==="
+        ls -la $TARGET_DIR
+
+    - name: Запуск компиляции vendor_boot
+      run: |
+        cd twrp
+        export ALLOW_MISSING_DEPENDENCIES=true
+        source build/envsetup.sh
+        
+        # ВНИМАНИЕ: Измените 'ваша_модель' на имя вашего устройства (например: lunch twrp_chopin-eng)
+        lunch twrp_sea-eng
+        
+        # mka сама автоматически выделит нужный поток потоков (-j)
+        mka vendorbootimage
+
+    - name: Загрузка готового образа в артефакты GitHub
+      uses: actions/upload-artifact@v4
+      with:
+        name: TWRP-Vendor-BootImage
+        path: twrp/out/target/product/ваша_модель/vendor_boot.img
