@@ -39,7 +39,7 @@ jobs:
     - name: Распаковка Device Tree с отсечением верхней папки
       run: |
         # ВНИМАНИЕ: Замените 'ваша_модель' на кодовое имя вашего устройства!
-        TARGET_DIR="twrp/device/xiaomi/ваша_модель"
+        TARGET_DIR="twrp/device/xiaomi/sea"
         mkdir -p $TARGET_DIR
         
         # Создаем временную папку, чтобы разобрать вложенность архива
@@ -65,7 +65,7 @@ jobs:
         source build/envsetup.sh
         
         # ВНИМАНИЕ: Измените 'ваша_модель' на имя вашего устройства (например: lunch twrp_chopin-eng)
-        lunch twrp_ваша_модель-eng
+        lunch twrp_sea-eng
         
         # Собираем vendorboot
         mka vendorbootimage -j$(nproc --all)
