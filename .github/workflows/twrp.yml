@@ -18,7 +18,8 @@ jobs:
     - name: Установка официальной утилиты Repo
       run: |
         mkdir -p ~/bin
-        curl https://googleapis.com > ~/bin/repo
+        # Используем зеркало GitHub и флаг -L для обхода HTML-редиректов Google
+        curl -sL https://githubusercontent.com > ~/bin/repo
         chmod a+x ~/bin/repo
         sudo ln -sf ~/bin/repo /usr/bin/repo
 
